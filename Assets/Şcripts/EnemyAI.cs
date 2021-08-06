@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
-    [SerializeField] Transform target;
+    Transform target;
     [SerializeField] float chaseTargetRange = 5f;
 
     float distanceToEnemy = Mathf.Infinity;
@@ -15,12 +15,20 @@ public class EnemyAI : MonoBehaviour
     bool isProvoked = false;
     Animator animator;
     EnemyHealth health;
+
+    [SerializeField]AudioSource runAS;
+
+    [SerializeField] AudioClip attackClip;
+    AudioClip defClip;
     // Start is called before the first frame update
     void Start()
     {
+        //runAS = GetComponent<AudioSource>();
         navMeshAgent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         health = GetComponent<EnemyHealth>();
+        target = FindObjectOfType<PlayerHealth>().transform;
+        defClip = runAS.clip;
     }
 
     void OnDrawGizmosSelected() {
@@ -60,15 +68,35 @@ public class EnemyAI : MonoBehaviour
 
     private void EngageTarget() {
         faceTarget();
+        
+
         if (distanceToEnemy > navMeshAgent.stoppingDistance) {
             animator.SetBool("Attack", false);
             navMeshAgent.SetDestination(target.position);
             animator.SetTrigger("move");
+            if (!runAS.isPlaying) {
+                runAS.PlayOneShot(defClip); 
+            }
         }
-            
 
         if (distanceToEnemy <= navMeshAgent.stoppingDistance) {
             animator.SetBool("Attack", true);
+            
+            if (runAS.clip == defClip) {
+                runAS.Stop();
+                runAS.clip = attackClip;
+                runAS.PlayOneShot(runAS.clip);
+            }
+            if (!runAS.isPlaying) {
+                runAS.PlayOneShot(runAS.clip);
+            }
+                
         }
+
+
+    }
+
+    private void playClip(AudioClip clip) {
+        
     }
 }
